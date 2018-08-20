@@ -1,0 +1,176 @@
+<style type="text/css">
+  body{
+  background: linear-gradient(to right, #004e92, #000428);
+}
+.keyboard{
+    background-color: #4169E1;
+    width: 780px;
+    height:300px;
+    margin: 50px auto;
+    border-radius: 10px;
+    padding: 0px 40px;
+    border-bottom: 7px solid #517bf7;
+
+  }
+  h1{
+    font-family: 'Amaranth', sans-serif;
+       color: white;
+       text-align: center;
+  }
+  ul{
+    list-style-type: none;
+    position: relative;
+  }
+  ul li{
+    float: left;
+    position: relative;
+     text-decoration: none;
+     border-radius: 0 0 7px 7px;
+     /*margin-top: 80px;*/
+/*     border-top: 1px solid #e5485d; */
+
+
+  }
+  .white_key{
+    background-color: #ecf0f1;
+     border-style: solid;
+   /* border-width: 0px 1px 1px;*/
+      border-width: 1px;
+      height: 200px;
+      width: 50px;
+      border-bottom: 3px solid #dedede;
+     /* text-decoration: none;*/
+  }
+  .black_key{
+    background-color: black;
+     border-style: solid;
+   /* border-width: 0px 1px 1px;*/
+      border-width: 1px;
+      height: 150px;
+      width: 25px;
+      margin-left: -30px;
+      z-index: 5;
+      border-bottom: 3px solid #494848;
+  }
+  .white_key+.black_key{
+    left: 17px;
+  }
+  .note_info{
+    font-size: 20px;
+    color: gold;
+    font-weight: bold;
+     font-family: 'Amaranth', sans-serif;
+
+  }
+
+</style>
+<link href="https://fonts.googleapis.com/css?family=Amaranth" rel="stylesheet">
+<ul class="keyboard">
+  <h1>Faux-Moog</h1>
+  <li class="white_key" data-key="C3" data-freq="130.81" data-keyPressed="81"></li>
+  <li class="black_key" data-key="C#3/Db3" data-freq="138.59" data-keyPressed="87"></li>
+  <li class="white_key" data-key="D3" data-freq="146.83" data-keyPressed="69"></li>
+  <li class="black_key" data-key="D#3/Eb3" data-freq="155.56" data-keyPressed="82"></li>
+  <li class="white_key" data-key="E3" data-freq="164.81" data-keyPressed="84"></li>
+  <li class="white_key" data-key="F3" data-freq="174.61" data-keyPressed="89"></li>
+  <li class="black_key" data-key="F#3/Gb3" data-freq="185.00" data-keyPressed="85"></li>
+  <li class="white_key" data-key="G3" data-freq="196.00" data-keyPressed="73"></li>
+  <li class="black_key" data-key="G#3/Ab3" data-freq="207.65" data-keyPressed="79"></li>
+  <li class="white_key" data-key="A3" data-freq="220.00" data-keyPressed="80"></li>
+  <li class="black_key" data-key="A#3/Bb3" data-freq="233.88" data-keyPressed="65"></li>
+  <li class="white_key" data-key="B3" data-freq="246.94" data-keyPressed="83"></li>
+  <li class="white_key" data-key="C4" data-freq="261.63" data-keyPressed="68"></li>
+  <li class="black_key" data-key="C#4/Db4" data-freq="277.18" data-keyPressed="70"></li>
+  <li class="white_key" data-key="D4" data-freq="293.66" data-keyPressed="71"></li>
+  <li class="black_key" data-key="D#4/Eb4" data-freq="311.13" data-keyPressed="72"></li>
+  <li class="white_key" data-key="E4" data-freq="329.63" data-keyPressed="74"></li>
+  <li class="white_key" data-key="F4" data-freq="349.23" data-keyPressed="75"></li>
+  <li class="black_key" data-key="F#4/Gb4" data-freq="369.99" data-keyPressed="76"></li>
+  <li class="white_key" data-key="G4" data-freq="392.00" data-keyPressed="90"></li>
+  <li class="black_key" data-key="G#4/Ab4" data-freq="415.30" data-keyPressed="88"></li>
+  <li class="white_key" data-key="A4" data-freq="440.00" data-keyPressed="67"></li>
+  <li class="black_key" data-key="A#4/Bb4" data-freq="466.16" data-keyPressed="86"></li>
+  <li class="white_key" data-key="B4" data-freq="493.88" data-keyPressed="66"></li>
+  <li class="white_key" data-key="C5" data-freq="523.25" data-keyPressed="78"></li>
+
+</ul>
+
+<div class="note_info">Note Duration: <span id="note_duration"></span></div>
+<div class="note_info">Silence Duration (Between Notes): <span id="silence_duration"></span></div>
+<div class="note_info">Note Played: <span id="note_played"></span></div>
+<div class="note_info">Frequency: <span id="frequency_played"></span></div>
+
+<script type="text/javascript">
+
+var keylist=document.querySelectorAll("LI");
+var noteDuration=document.getElementById("note_duration");
+var silenceDuration=document.getElementById("silence_duration");
+var notePlayed=document.getElementById("note_played");
+var frequencyPlayed=document.getElementById("frequency_played");
+
+var start;
+var end;
+var delta;
+
+var silentStart;
+var silentEnd;
+var silentDelta;
+  
+var durationOfSound=[];
+
+var durationOfSilence=[];
+
+
+  for (var i = 0; i < keylist.length; i++) {
+    
+    keylist[i].addEventListener("mousedown", function(){
+      
+      start = new Date();
+      silentEnd= new Date();
+      
+
+      audioCxt= new (window.AudioContext|| window.webkitAudioContext)();
+      
+      osc=audioCxt.createOscillator();
+      gainNode=audioCxt.createGain();
+      
+      osc.type="triangle";
+
+      var assignedfreq=this.getAttribute('data-freq');
+
+      osc.frequency.setValueAtTime(assignedfreq, audioCxt.currentTime);
+      osc.connect(gainNode);
+      
+      
+      
+      gainNode.connect(audioCxt.destination);
+      osc.start(audioCxt.currentTime);
+
+      notePlayed.innerHTML=this.getAttribute('data-key');
+      frequencyPlayed.innerHTML=assignedfreq;
+
+      silentDelta=(silentEnd - silentStart) / 1000.0;
+
+      durationOfSilence.push(silentDelta+" sec");
+      console.log(durationOfSilence);
+      silenceDuration.innerHTML=durationOfSilence.slice(-1)[0];
+
+    });
+    keylist[i].addEventListener("mouseup", function(){
+        end = new Date();
+        silentStart= new Date();
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCxt.currentTime + .5);
+        delta = (end - start) / 1000.0;
+
+        durationOfSound.push(delta+" sec");
+        console.log(durationOfSound);
+        noteDuration.innerHTML=durationOfSound.slice(-1)[0];
+      // osc.stop(); //abrupt stop
+      // audioCxt.close();
+
+
+    });
+  }
+    
+    
+</script>
